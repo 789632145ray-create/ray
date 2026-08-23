@@ -1,0 +1,219 @@
+:root {
+  --bg-deep: #0c1412;
+  --bg-mid: #13201c;
+  --bg-lift: #1a2c26;
+  --ink: #e8f2ec;
+  --ink-muted: #8aa399;
+  --jade: #3ecf8e;
+  --jade-dim: #249a64;
+  --amber: #f0b429;
+  --coral: #ff6b5b;
+  --line: rgba(232, 242, 236, 0.12);
+  --glow: rgba(62, 207, 142, 0.35);
+  --font-display: "Syne", "Noto Sans TC", sans-serif;
+  --font-body: "Noto Sans TC", sans-serif;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(62, 207, 142, 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(240, 180, 41, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(255, 107, 91, 0.08), transparent 60%),
+    linear-gradient(165deg, var(--bg-deep), var(--bg-mid) 45%, #0e1815);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: min(960px, 100% - 2rem);
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.brand-mark .ab {
+  color: var(--jade);
+}
+
+.surface {
+  background: color-mix(in srgb, var(--bg-lift) 78%, transparent);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem 1.4rem;
+  font-weight: 700;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--jade), var(--jade-dim));
+  color: #04140d;
+  box-shadow: 0 8px 28px var(--glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 12px 32px var(--glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn-amber {
+  background: linear-gradient(135deg, var(--amber), #d4920f);
+  color: #1a1200;
+  box-shadow: 0 8px 28px rgba(240, 180, 41, 0.28);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  padding: 0.9rem 1rem;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.field input:focus {
+  border-color: color-mix(in srgb, var(--jade) 65%, white);
+  box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.18);
+}
+
+.field input.digit-input {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  letter-spacing: 0.35em;
+  text-align: center;
+  padding-left: 0.7em;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.error-banner {
+  color: #ffd2cd;
+  background: rgba(255, 107, 91, 0.16);
+  border: 1px solid rgba(255, 107, 91, 0.35);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(62, 207, 142, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(62, 207, 142, 0);
+  }
+}
+
+@keyframes digit-pop {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.rise-in {
+  animation: rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pulse-turn {
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+.guess-row {
+  animation: digit-pop 320ms ease both;
+}
