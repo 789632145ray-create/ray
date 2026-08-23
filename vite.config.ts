@@ -12,10 +12,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true,
     proxy: {
       "/socket.io": {
-        target: "http://localhost:3001",
+        target: "http://127.0.0.1:3001",
         ws: true,
+        changeOrigin: true,
       },
     },
   },

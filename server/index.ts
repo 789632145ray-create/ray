@@ -178,7 +178,12 @@ function createRoom(hostName: string, maxRounds = 4): { room: Room; playerId: st
 const app = express();
 const httpServer = createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
-  cors: { origin: isProd ? false : ["http://localhost:5173", "http://127.0.0.1:5173"] },
+  cors: {
+    origin: isProd
+      ? false
+      : ["http://localhost:5173", "http://127.0.0.1:5173"],
+    methods: ["GET", "POST"],
+  },
 });
 
 if (isProd) {

@@ -3,11 +3,12 @@ import type { ClientToServerEvents, ServerToClientEvents } from "@shared/types";
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const URL = import.meta.env.PROD ? undefined : "http://localhost:3001";
-
+/** Same-origin in prod; in Vite dev, /socket.io is proxied to the API server. */
 export function createSocket(): AppSocket {
-  return io(URL, {
+  return io({
     autoConnect: true,
-    transports: ["websocket", "polling"],
+    // Vite's WS proxy can drop Socket.IO upgrades; polling is reliable.
+    transports: ["polling"],
+    reconnection: true,
   });
 }

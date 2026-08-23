@@ -7,11 +7,26 @@ import { createSocket, type AppSocket } from "./socket";
 type Screen = "home" | "room";
 
 function useSocket() {
-  const [socket] = useState<AppSocket>(() => createSocket());
-  useEffect(() => () => {
-    socket.disconnect();
-  }, [socket]);
+  const [socket, setSocket] = useState<AppSocket | null>(null);
+
+  useEffect(() => {
+    const s = createSocket();
+    setSocket(s);
+    return () => {
+      s.removeAllListeners();
+      s.disconnect();
+    };
+  }, []);
+
   return socket;
+}
+
+function whenConnected(socket: AppSocket, run: () => void) {
+  if (socket.connected) {
+    run();
+    return;
+  }
+  socket.once("connect", run);
 }
 
 export default function App() {
@@ -29,6 +44,7 @@ export default function App() {
   const [guessInput, setGuessInput] = useState("");
 
   useEffect(() => {
+    if (!socket) return;
     const onUpdate = (next: RoomPublic) => setRoom(next);
     const onErr = (message: string) => setError(message);
     socket.on("room:update", onUpdate);
@@ -51,6 +67,16 @@ export default function App() {
   const lastWinner = room?.players.find((p) => p.id === room.lastRoundWinnerId) ?? null;
   const champion = room?.players.find((p) => p.id === room.winnerId) ?? null;
 
+  if (!socket) {
+    return (
+      <div className="app-shell">
+        <p className="muted">連線中…</p>
+      </div>
+    );
+  }
+
+  const sock = socket;
+
   function enterRoom(nextRoom: RoomPublic, id: string) {
     setRoom(nextRoom);
     setPlayerId(id);
@@ -63,32 +89,36 @@ export default function App() {
   function createRoom() {
     setBusy(true);
     setError(null);
-    socket.emit("room:create", { name, maxRounds }, (res) => {
-      setBusy(false);
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      enterRoom(res.room, res.playerId);
+    whenConnected(sock, () => {
+      sock.emit("room:create", { name, maxRounds }, (res) => {
+        setBusy(false);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        enterRoom(res.room, res.playerId);
+      });
     });
   }
 
   function joinRoom() {
     setBusy(true);
     setError(null);
-    socket.emit("room:join", { code, name }, (res) => {
-      setBusy(false);
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      enterRoom(res.room, res.playerId);
+    whenConnected(sock, () => {
+      sock.emit("room:join", { code, name }, (res) => {
+        setBusy(false);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        enterRoom(res.room, res.playerId);
+      });
     });
   }
 
   function startGame() {
     setBusy(true);
-    socket.emit("room:start", {}, (res) => {
+    sock.emit("room:start", {}, (res) => {
       setBusy(false);
       if (!res.ok) setError(res.error);
     });
@@ -96,7 +126,7 @@ export default function App() {
 
   function submitSecret() {
     setBusy(true);
-    socket.emit("game:setSecret", { secret: secretInput }, (res) => {
+    sock.emit("game:setSecret", { secret: secretInput }, (res) => {
       setBusy(false);
       if (!res.ok) {
         setError(res.error);
@@ -109,7 +139,7 @@ export default function App() {
 
   function submitGuess() {
     setBusy(true);
-    socket.emit("game:guess", { guess: guessInput }, (res) => {
+    sock.emit("game:guess", { guess: guessInput }, (res) => {
       setBusy(false);
       if (!res.ok) {
         setError(res.error);
@@ -122,14 +152,14 @@ export default function App() {
 
   function nextRound() {
     setBusy(true);
-    socket.emit("game:nextRound", {}, (res) => {
+    sock.emit("game:nextRound", {}, (res) => {
       setBusy(false);
       if (!res.ok) setError(res.error);
     });
   }
 
   function leaveRoom() {
-    socket.emit("room:leave");
+    sock.emit("room:leave");
     setScreen("home");
     setRoom(null);
     setPlayerId(null);
