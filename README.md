@@ -28,6 +28,39 @@ npm start
 
 瀏覽器開啟 http://localhost:3001
 
+## 部署到公網
+
+### Render（建議，免費額度）
+
+1. 把這個 repo 推到 GitHub
+2. 到 [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint**
+3. 選擇此 repo（已含 `render.yaml`）
+4. 建立後會得到類似 `https://ji-a-ji-b.onrender.com` 的網址
+
+或手動建立 Web Service：Build `npm ci && npm run build`、Start `npm start`、Health Check `/health`。
+
+### Docker / Fly.io
+
+```bash
+docker build -t ji-a-ji-b .
+docker run -p 3001:3001 ji-a-ji-b
+```
+
+Fly：
+
+```bash
+fly launch --no-deploy   # 若尚未建立 app
+fly deploy
+```
+
+### 本機臨時公開（Cloudflare Quick Tunnel）
+
+```bash
+npm run build && npm start
+# 另一個終端
+cloudflared tunnel --url http://127.0.0.1:3001
+```
+
 ## 技術
 
 - React + Vite

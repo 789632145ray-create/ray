@@ -186,14 +186,15 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   },
 });
 
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
 if (isProd) {
   const clientDist = path.join(__dirname, "../dist/client");
   app.use(express.static(clientDist));
-  app.get("*", (_req, res) => {
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/socket.io")) return next();
     res.sendFile(path.join(clientDist, "index.html"));
   });
-} else {
-  app.get("/health", (_req, res) => res.json({ ok: true }));
 }
 
 io.on("connection", (socket) => {
@@ -475,6 +476,6 @@ io.on("connection", (socket) => {
   }
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`幾A幾B server on http://localhost:${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`幾A幾B server on http://0.0.0.0:${PORT}`);
 });
