@@ -34,7 +34,9 @@ export function GameScreen({
     ? `${winner.name} 勝出`
     : state.phase === "rolling"
       ? `${current.name} 請擲骰`
-      : `${current.name} 請走馬：點發亮的馬、金色格子，或右側按鈕${legal.some((m) => m.kind === "exit") ? "（可出廄）" : ""}`;
+      : `${current.name} 請走馬：點發亮的馬、金色格子，或右側按鈕${
+          legal.some((m) => m.captured) ? "（點數剛好，可踢馬）" : legal.some((m) => m.kind === "exit") ? "（可出廄）" : ""
+        }`;
 
   return (
     <>

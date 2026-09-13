@@ -92,6 +92,20 @@ function homePathClear(player: Player, from: number, to: number): boolean {
   return true;
 }
 
+/** Squares strictly between fromProgress and destProgress must be empty. Dest itself is allowed. */
+function pathClearBefore(
+  state: GameState,
+  color: Color,
+  fromProgress: number,
+  destProgress: number,
+): boolean {
+  const last = Math.min(destProgress, LAST_PATH + 1);
+  for (let step = fromProgress + 1; step < last; step++) {
+    if (occupantAtPath(state, pathIndexFor(color, step))) return false;
+  }
+  return true;
+}
+
 function findHorse(player: Player, horseId: number): Horse {
   const horse = player.horses.find((h) => h.id === horseId);
   if (!horse) throw new Error("找不到馬匹");
@@ -130,6 +144,7 @@ export function getLegalMoves(state: GameState): Move[] {
   for (const horse of player.horses) {
     if (horse.zone === "path") {
       const next = horse.progress + dice;
+      if (!pathClearBefore(state, player.color, horse.progress, next)) continue;
       if (next <= LAST_PATH) {
         const destIndex = pathIndexFor(player.color, next);
         if (ownHorseAtPath(player, destIndex)) continue;
