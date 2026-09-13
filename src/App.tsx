@@ -57,7 +57,10 @@ export function App() {
       setError("");
       setView(next.status === "lobby" ? "online-room" : "online-game");
     };
-    const onError = (message: string) => setError(message);
+    const onError = (message: string) => {
+      setError(message);
+      setRolling(false);
+    };
     socket.on("room", onRoom);
     socket.on("joined", onJoined);
     socket.on("error-message", onError);
@@ -95,6 +98,13 @@ export function App() {
     }, 700);
     return () => window.clearTimeout(timer);
   }, [view, localGame]);
+
+  useEffect(() => {
+    if (!rolling || view !== "online-game") return;
+    if (room?.game?.lastDice == null) return;
+    const timer = window.setTimeout(() => setRolling(false), 420);
+    return () => window.clearTimeout(timer);
+  }, [rolling, view, room?.game?.lastDice, room?.game?.rollsThisTurn]);
 
   function startLocal() {
     unlockAudio();
@@ -345,9 +355,10 @@ export function App() {
         <GameScreen
           state={room.game}
           canAct={onlineCanAct}
-          rolling={false}
+          rolling={rolling}
           youName={you?.name}
           onRoll={() => {
+            setRolling(true);
             soundRoll();
             socket.emit("roll");
           }}

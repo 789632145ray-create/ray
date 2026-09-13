@@ -304,16 +304,40 @@ button {
 }
 
 .die {
-  width: 84px;
-  height: 84px;
-  border-radius: 18px;
-  background: linear-gradient(#fffaf0, #e8d3a4);
-  color: #2a140c;
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  background: transparent;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  padding: 12px;
-  box-shadow: 0 10px 0 #8a5a18, 0 16px 24px rgba(0, 0, 0, 0.35);
+  place-items: center;
+  box-shadow: 0 10px 0 #7a4a12, 0 16px 24px rgba(0, 0, 0, 0.35);
+}
+
+.die-svg {
+  width: 96px;
+  height: 96px;
+  display: block;
+}
+
+.die-empty {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #fff6e4;
+  color: #8a5a18;
+  font-size: 42px;
+  font-weight: 800;
+}
+
+.die-score {
+  margin: 0;
+  font-family: "Noto Serif TC", serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffe7a8;
+  letter-spacing: 0.08em;
 }
 
 .die.rolling {
@@ -327,15 +351,6 @@ button {
   75% {
     transform: rotate(10deg) translateX(3px);
   }
-}
-
-.pip {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #2a140c;
-  justify-self: center;
-  align-self: center;
 }
 
 .move-list {

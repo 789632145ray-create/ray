@@ -24,6 +24,8 @@ export type GameState = {
   current: number;
   phase: GamePhase;
   dice: number | null;
+  /** Last rolled face, kept for display after the move is spent. */
+  lastDice: number | null;
   extraRollsLeft: number;
   rollsThisTurn: number;
   winnerIndex: number | null;

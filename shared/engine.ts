@@ -44,6 +44,7 @@ export function createGame(
     current: 0,
     phase: "rolling",
     dice: null,
+    lastDice: null,
     extraRollsLeft: 0,
     rollsThisTurn: 0,
     winnerIndex: null,
@@ -285,6 +286,7 @@ export function rollDice(state: GameState, rng: Rng = Math.random): GameState {
   const next = clone(state);
   const value = 1 + Math.floor(rng() * 6);
   next.dice = value;
+  next.lastDice = value;
   next.rollsThisTurn += 1;
   next.phase = "moving";
   const player = next.players[next.current];

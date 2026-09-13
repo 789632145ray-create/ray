@@ -86,7 +86,7 @@ export function GameScreen({
           })}
           <div className="panel dice-cup">
             <DiceCup
-              value={state.dice}
+              value={state.dice ?? state.lastDice}
               rolling={rolling}
               disabled={!canAct || state.phase !== "rolling" || !!winner}
               onRoll={onRoll}

@@ -56,6 +56,7 @@ describe("roll and exit", () => {
     let state = createGame(["紅", "綠"]);
     state = rollDice(state, rngSeq([die(6)]));
     expect(state.dice).toBe(6);
+    expect(state.lastDice).toBe(6);
     const moves = getLegalMoves(state);
     expect(moves.every((m) => m.kind === "exit")).toBe(true);
     expect(moves).toHaveLength(4);
@@ -99,6 +100,17 @@ describe("movement and capture", () => {
     state = applyMove(state, moves[0]);
     expect(state.players[0].horses[0].progress).toBe(7);
     expect(state.current).toBe(1);
+  });
+
+  it("keeps showing the rolled face after the move is spent", () => {
+    let state = createGame(["紅", "綠"]);
+    setHorse(state.players[0], 0, "path", 4);
+    state = rollDice(state, rngSeq([die(3)]));
+    expect(state.lastDice).toBe(3);
+    const move = getLegalMoves(state).find((m) => m.horseId === 0)!;
+    state = applyMove(state, move);
+    expect(state.dice).toBeNull();
+    expect(state.lastDice).toBe(3);
   });
 
   it("kicks an opponent back to the nest", () => {
