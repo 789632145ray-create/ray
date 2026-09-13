@@ -13,7 +13,6 @@ function rngSeq(values: number[]): () => number {
   };
 }
 
-/** Map 1–6 to Math.random buckets used by rollDice. */
 function die(n: number): number {
   return (n - 1) / 6 + 0.001;
 }
@@ -25,16 +24,19 @@ function setHorse(player: Player, id: number, zone: Horse["zone"], progress: num
 }
 
 describe("board", () => {
-  it("has 52 unique path cells", () => {
+  it("has 56 unique path cells and red exits at the boxed square", () => {
     expect(PATH_CELLS).toHaveLength(56);
     const keys = new Set(PATH_CELLS.map((c) => `${c.x},${c.y}`));
     expect(keys.size).toBe(56);
-    expect(PATH_CELLS).toEqual(expect.arrayContaining([
-      { x: 6, y: 6 },
-      { x: 8, y: 6 },
-      { x: 8, y: 8 },
-      { x: 6, y: 8 },
-    ]));
+    expect(PATH_CELLS[0]).toEqual({ x: 0, y: 6 });
+    expect(PATH_CELLS).toEqual(
+      expect.arrayContaining([
+        { x: 6, y: 6 },
+        { x: 8, y: 6 },
+        { x: 8, y: 8 },
+        { x: 6, y: 8 },
+      ]),
+    );
   });
 
   it("keeps home stall 6 outside the center cell", () => {
@@ -58,24 +60,25 @@ describe("createGame", () => {
 });
 
 describe("roll and exit", () => {
-  it("lets a 6 leave the nest", () => {
+  it("rolls two dice and lets a 6 leave onto the exit square", () => {
     let state = createGame(["紅", "綠"]);
-    state = rollDice(state, rngSeq([die(6)]));
-    expect(state.dice).toBe(6);
-    expect(state.lastDice).toBe(6);
-    const moves = getLegalMoves(state);
-    expect(moves.every((m) => m.kind === "exit")).toBe(true);
-    expect(moves).toHaveLength(4);
-    state = applyMove(state, moves[0]);
+    state = rollDice(state, rngSeq([die(6), die(4)]));
+    expect(state.dice).toEqual([6, 4]);
+    expect(state.lastDice).toEqual([6, 4]);
+    const exits = getLegalMoves(state).filter((m) => m.kind === "exit");
+    expect(exits).toHaveLength(4);
+    expect(exits[0].steps).toBe(6);
+    state = applyMove(state, exits[0]);
     expect(state.players[0].horses[0].zone).toBe("path");
     expect(state.players[0].horses[0].progress).toBe(0);
-    expect(state.phase).toBe("rolling");
-    expect(state.current).toBe(0);
+    expect(PATH_CELLS[0]).toEqual({ x: 0, y: 6 });
+    expect(state.dice).toEqual([4]);
+    expect(state.phase).toBe("moving");
   });
 
-  it("cannot leave the nest on a 3", () => {
+  it("cannot leave the nest without a 1 or 6", () => {
     let state = createGame(["紅", "綠"]);
-    state = rollDice(state, rngSeq([die(3)]));
+    state = rollDice(state, rngSeq([die(3), die(2)]));
     expect(getLegalMoves(state)).toHaveLength(0);
     expect(state.current).toBe(1);
     expect(state.phase).toBe("rolling");
@@ -87,7 +90,7 @@ describe("roll and exit", () => {
     setHorse(state.players[0], 1, "home", 2);
     setHorse(state.players[0], 2, "home", 3);
     setHorse(state.players[0], 3, "home", 6);
-    state = rollDice(state, rngSeq([die(6)]));
+    state = rollDice(state, rngSeq([die(6), die(5)]));
     expect(getLegalMoves(state)).toHaveLength(0);
     expect(state.current).toBe(0);
     expect(state.phase).toBe("rolling");
@@ -99,7 +102,7 @@ describe("movement and capture", () => {
     let state = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "path", 4);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const moves = getLegalMoves(state).filter((m) => m.horseId === 0);
     expect(moves).toHaveLength(1);
     expect(moves[0].progress).toBe(7);
@@ -108,15 +111,21 @@ describe("movement and capture", () => {
     expect(state.current).toBe(1);
   });
 
-  it("keeps showing the rolled face after the move is spent", () => {
+  it("uses each die separately and keeps the last pair on screen", () => {
     let state = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "path", 4);
-    state = rollDice(state, rngSeq([die(3)]));
-    expect(state.lastDice).toBe(3);
-    const move = getLegalMoves(state).find((m) => m.horseId === 0)!;
-    state = applyMove(state, move);
-    expect(state.dice).toBeNull();
-    expect(state.lastDice).toBe(3);
+    state = rollDice(state, rngSeq([die(3), die(2)]));
+    expect(state.lastDice).toEqual([3, 2]);
+    const first = getLegalMoves(state).find((m) => m.horseId === 0 && m.steps === 3)!;
+    state = applyMove(state, first);
+    expect(state.dice).toEqual([2]);
+    expect(state.lastDice).toEqual([3, 2]);
+    expect(state.phase).toBe("moving");
+    const second = getLegalMoves(state).find((m) => m.horseId === 0 && m.steps === 2)!;
+    state = applyMove(state, second);
+    expect(state.dice === null || state.dice.length === 0).toBe(true);
+    expect(state.lastDice).toEqual([3, 2]);
+    expect(state.current).toBe(1);
   });
 
   it("kicks an opponent back to the nest", () => {
@@ -124,7 +133,7 @@ describe("movement and capture", () => {
     setHorse(state.players[0], 0, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const move = getLegalMoves(state).find((m) => m.horseId === 0 && m.captured);
     expect(move).toBeTruthy();
     state = applyMove(state, move!);
@@ -137,7 +146,7 @@ describe("movement and capture", () => {
     setHorse(state.players[0], 0, "path", 2);
     setHorse(state.players[0], 1, "path", 5);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const moves = getLegalMoves(state);
     expect(moves.some((m) => m.horseId === 0)).toBe(false);
   });
@@ -148,7 +157,7 @@ describe("movement and capture", () => {
     setHorse(state.players[0], 1, "path", 13);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const moves = getLegalMoves(state);
     expect(moves.some((m) => m.horseId === 0)).toBe(false);
     expect(moves.some((m) => m.horseId === 0 && m.captured)).toBe(false);
@@ -159,13 +168,13 @@ describe("movement and capture", () => {
     setHorse(state.players[0], 0, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
-    state.dice = 4;
+    state.dice = [4];
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
-    state.dice = 2;
+    state.dice = [2];
     expect(getLegalMoves(state).some((m) => m.horseId === 0 && m.progress === 13 && !m.captured)).toBe(
       true,
     );
-    state.dice = 3;
+    state.dice = [3];
     const kick = getLegalMoves(state).find((m) => m.horseId === 0 && m.captured);
     expect(kick?.progress).toBe(14);
   });
@@ -175,9 +184,9 @@ describe("movement and capture", () => {
     setHorse(state.players[0], 0, "path", 10);
     setHorse(state.players[1], 0, "path", 54);
     state.phase = "moving";
-    state.dice = 4;
+    state.dice = [4];
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
-    state.dice = 2;
+    state.dice = [2];
     const kick = getLegalMoves(state).find((m) => m.horseId === 0);
     expect(kick).toMatchObject({ progress: 12, captured: { playerIndex: 1, horseId: 0 } });
   });
@@ -189,9 +198,9 @@ describe("home stretch and win", () => {
     setHorse(state.players[0], 0, "path", 53);
     setHorse(state.players[1], 0, "path", 41);
     state.phase = "moving";
-    state.dice = 4;
+    state.dice = [4];
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
-    state.dice = 2;
+    state.dice = [2];
     const kick = getLegalMoves(state).find((m) => m.horseId === 0);
     expect(kick).toMatchObject({ zone: "path", progress: 55, captured: { playerIndex: 1, horseId: 0 } });
   });
@@ -200,7 +209,7 @@ describe("home stretch and win", () => {
     let state = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "path", 54);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const move = getLegalMoves(state).find((m) => m.horseId === 0);
     expect(move).toMatchObject({ zone: "home", progress: 2 });
     state = applyMove(state, move!);
@@ -211,9 +220,9 @@ describe("home stretch and win", () => {
     let state = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "home", 4);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
-    state.dice = 2;
+    state.dice = [2];
     const move = getLegalMoves(state).find((m) => m.horseId === 0);
     expect(move).toMatchObject({ zone: "home", progress: 6 });
   });
@@ -225,7 +234,7 @@ describe("home stretch and win", () => {
     setHorse(state.players[0], 2, "home", 4);
     setHorse(state.players[0], 3, "home", 2);
     state.phase = "moving";
-    state.dice = 1;
+    state.dice = [1];
     const move = getLegalMoves(state).find((m) => m.horseId === 3)!;
     state = applyMove(state, move);
     expect(state.winnerIndex).toBe(0);
@@ -237,7 +246,7 @@ describe("home stretch and win", () => {
     setHorse(state.players[0], 0, "home", 4);
     setHorse(state.players[0], 1, "home", 2);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     expect(getLegalMoves(state).some((m) => m.horseId === 1)).toBe(false);
   });
 });
@@ -249,22 +258,25 @@ describe("AI", () => {
     setHorse(state.players[0], 1, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
-    state.dice = 3;
+    state.dice = [3];
     const move = chooseAiMove(state, () => 0.9);
     expect(move?.captured).toBeTruthy();
   });
 });
 
 describe("turn cycle", () => {
-  it("caps extra rolls at three", () => {
+  it("caps extra rolls at three pairs", () => {
     let state: GameState = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "path", 0);
     for (let i = 0; i < 3; i++) {
-      state = rollDice(state, rngSeq([die(6)]));
+      state = rollDice(state, rngSeq([die(6), die(2)]));
       expect(state.current).toBe(0);
-      const move = getLegalMoves(state).find((m) => m.kind === "advance" && m.horseId === 0);
-      expect(move).toBeTruthy();
-      state = applyMove(state, move!);
+      const six = getLegalMoves(state).find((m) => m.kind === "advance" && m.horseId === 0 && m.steps === 6);
+      expect(six).toBeTruthy();
+      state = applyMove(state, six!);
+      const two = getLegalMoves(state).find((m) => m.kind === "advance" && m.horseId === 0 && m.steps === 2);
+      expect(two).toBeTruthy();
+      state = applyMove(state, two!);
     }
     expect(state.current).toBe(1);
   });

@@ -45,6 +45,7 @@ export function createGame(
     phase: "rolling",
     dice: null,
     lastDice: null,
+    bonusRoll: false,
     extraRollsLeft: 0,
     rollsThisTurn: 0,
     winnerIndex: null,
@@ -57,8 +58,8 @@ export function currentPlayer(state: GameState): Player {
   return state.players[state.current];
 }
 
-export function isExtraRoll(dice: number): boolean {
-  return EXIT_NUMBERS.has(dice);
+export function isBonusRoll(values: number[]): boolean {
+  return values.some((value) => EXIT_NUMBERS.has(value)) || (values.length === 2 && values[0] === values[1]);
 }
 
 function occupantAtPath(
@@ -93,7 +94,6 @@ function homePathClear(player: Player, from: number, to: number): boolean {
   return true;
 }
 
-/** Squares strictly between fromProgress and destProgress must be empty. Dest itself is allowed. */
 function pathClearBefore(
   state: GameState,
   color: Color,
@@ -113,11 +113,7 @@ function findHorse(player: Player, horseId: number): Horse {
   return horse;
 }
 
-export function getLegalMoves(state: GameState): Move[] {
-  if (state.phase !== "moving" || state.dice == null || state.winnerIndex != null) {
-    return [];
-  }
-  const dice = state.dice;
+function movesForDie(state: GameState, dice: number): Move[] {
   const playerIndex = state.current;
   const player = state.players[playerIndex];
   const moves: Move[] = [];
@@ -137,6 +133,7 @@ export function getLegalMoves(state: GameState): Move[] {
           progress: 0,
           captured:
             captured && captured.playerIndex !== playerIndex ? captured : null,
+          steps: dice,
         });
       }
     }
@@ -158,6 +155,7 @@ export function getLegalMoves(state: GameState): Move[] {
           progress: next,
           captured:
             captured && captured.playerIndex !== playerIndex ? captured : null,
+          steps: dice,
         });
       } else {
         const homeCell = next - LAST_PATH;
@@ -169,6 +167,7 @@ export function getLegalMoves(state: GameState): Move[] {
             zone: "home",
             progress: homeCell,
             captured: null,
+            steps: dice,
           });
         }
       }
@@ -182,11 +181,29 @@ export function getLegalMoves(state: GameState): Move[] {
           zone: "home",
           progress: dest,
           captured: null,
+          steps: dice,
         });
       }
     }
   }
 
+  return moves;
+}
+
+export function getLegalMoves(state: GameState): Move[] {
+  if (state.phase !== "moving" || !state.dice?.length || state.winnerIndex != null) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const moves: Move[] = [];
+  for (const value of new Set(state.dice)) {
+    for (const move of movesForDie(state, value)) {
+      const key = `${move.horseId}-${move.kind}-${move.zone}-${move.progress}-${move.steps}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      moves.push(move);
+    }
+  }
   return moves;
 }
 
@@ -210,7 +227,7 @@ function describeMove(state: GameState, move: Move, player: Player): string {
   if (move.zone === "home") {
     return `${player.name} 的${label}進入馬槽 ${move.progress}`;
   }
-  let text = `${player.name} 的${label}前進 ${state.dice} 步`;
+  let text = `${player.name} 的${label}前進 ${move.steps} 步`;
   if (move.captured) {
     const victim = state.players[move.captured.playerIndex];
     text += `，踢回 ${victim.name} 的${COLOR_LABEL[victim.color]}`;
@@ -218,9 +235,19 @@ function describeMove(state: GameState, move: Move, player: Player): string {
   return text;
 }
 
+function finishDiceOrPass(state: GameState): void {
+  if (state.bonusRoll && state.rollsThisTurn < MAX_ROLLS_PER_TURN) {
+    state.phase = "rolling";
+    state.dice = null;
+    state.log = [`擲到 1、6 或對子，${state.players[state.current].name} 再擲一次`, ...state.log];
+    return;
+  }
+  passTurn(state);
+}
+
 export function applyMove(state: GameState, move: Move): GameState {
   const next = clone(state);
-  if (next.phase !== "moving" || next.dice == null) {
+  if (next.phase !== "moving" || !next.dice?.length) {
     throw new Error("現在不能走馬");
   }
   const legal = getLegalMoves(next);
@@ -230,11 +257,16 @@ export function applyMove(state: GameState, move: Move): GameState {
       m.horseId === move.horseId &&
       m.kind === move.kind &&
       m.zone === move.zone &&
-      m.progress === move.progress,
+      m.progress === move.progress &&
+      m.steps === move.steps,
   );
   if (!match || move.playerIndex !== next.current) {
     throw new Error("不合法的走法");
   }
+
+  const used = next.dice.indexOf(move.steps);
+  if (used < 0) throw new Error("沒有這個點數");
+  next.dice.splice(used, 1);
 
   const player = next.players[next.current];
   const horse = findHorse(player, move.horseId);
@@ -258,15 +290,13 @@ export function applyMove(state: GameState, move: Move): GameState {
     return next;
   }
 
-  const keepTurn = isExtraRoll(next.dice) && next.rollsThisTurn < MAX_ROLLS_PER_TURN;
-  next.dice = null;
-  if (keepTurn) {
-    next.phase = "rolling";
-    next.extraRollsLeft = 1;
-    next.log = [`擲到 1 或 6，${player.name} 再擲一次`, ...next.log];
-  } else {
-    passTurn(next);
+  if (next.dice.length > 0 && getLegalMoves(next).length === 0) {
+    next.log = [`剩下的點數走不了`, ...next.log];
+    next.dice = [];
   }
+
+  if (next.dice.length > 0) return next;
+  finishDiceOrPass(next);
   return next;
 }
 
@@ -274,6 +304,7 @@ function passTurn(state: GameState): void {
   state.current = (state.current + 1) % state.players.length;
   state.phase = "rolling";
   state.dice = null;
+  state.bonusRoll = false;
   state.extraRollsLeft = 0;
   state.rollsThisTurn = 0;
   state.turnId += 1;
@@ -284,20 +315,22 @@ export function rollDice(state: GameState, rng: Rng = Math.random): GameState {
     throw new Error("現在不能擲骰");
   }
   const next = clone(state);
-  const value = 1 + Math.floor(rng() * 6);
-  next.dice = value;
-  next.lastDice = value;
+  const first = 1 + Math.floor(rng() * 6);
+  const second = 1 + Math.floor(rng() * 6);
+  next.dice = [first, second];
+  next.lastDice = [first, second];
+  next.bonusRoll = isBonusRoll([first, second]);
   next.rollsThisTurn += 1;
   next.phase = "moving";
   const player = next.players[next.current];
-  next.log = [`${player.name} 擲出 ${value}`, ...next.log].slice(0, 40);
+  next.log = [`${player.name} 擲出 ${first} 與 ${second}`, ...next.log].slice(0, 40);
 
   const moves = getLegalMoves(next);
   if (moves.length === 0) {
-    if (isExtraRoll(value) && next.rollsThisTurn < MAX_ROLLS_PER_TURN) {
+    if (next.bonusRoll && next.rollsThisTurn < MAX_ROLLS_PER_TURN) {
       next.phase = "rolling";
       next.dice = null;
-      next.log = [`沒有可走的馬，但擲到 ${value}，再擲一次`, ...next.log];
+      next.log = [`沒有可走的馬，但擲到 ${first}、${second}，再擲一次`, ...next.log];
     } else {
       next.log = [`沒有可走的馬，輪到下一位`, ...next.log];
       passTurn(next);
@@ -310,7 +343,7 @@ export function forcedPassIfStuck(state: GameState): GameState {
   if (state.phase !== "moving") return state;
   if (getLegalMoves(state).length > 0) return state;
   const next = clone(state);
-  if (next.dice != null && isExtraRoll(next.dice) && next.rollsThisTurn < MAX_ROLLS_PER_TURN) {
+  if (next.bonusRoll && next.rollsThisTurn < MAX_ROLLS_PER_TURN) {
     next.phase = "rolling";
     next.dice = null;
     return next;

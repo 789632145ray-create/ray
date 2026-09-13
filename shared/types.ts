@@ -23,9 +23,11 @@ export type GameState = {
   players: Player[];
   current: number;
   phase: GamePhase;
-  dice: number | null;
-  /** Last rolled face, kept for display after the move is spent. */
-  lastDice: number | null;
+  /** Remaining unused dice this roll. */
+  dice: number[] | null;
+  /** Last rolled pair, kept for display after dice are spent. */
+  lastDice: number[] | null;
+  bonusRoll: boolean;
   extraRollsLeft: number;
   rollsThisTurn: number;
   winnerIndex: number | null;
@@ -43,6 +45,8 @@ export type Move = {
   zone: HorseZone;
   progress: number;
   captured: { playerIndex: number; horseId: number } | null;
+  /** Which die face this move spends. */
+  steps: number;
 };
 
 export type RoomPlayer = {

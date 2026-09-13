@@ -303,9 +303,19 @@ button {
   padding: 16px;
 }
 
+.dice-pair {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dice-pair.rolling {
+  animation: shake 0.35s linear infinite;
+}
+
 .die {
-  width: 96px;
-  height: 96px;
+  width: 84px;
+  height: 84px;
   border-radius: 20px;
   background: transparent;
   display: grid;
@@ -314,14 +324,18 @@ button {
 }
 
 .die-svg {
-  width: 96px;
-  height: 96px;
+  width: 84px;
+  height: 84px;
   display: block;
 }
 
+.die-svg.is-spent {
+  opacity: 0.35;
+}
+
 .die-empty {
-  width: 96px;
-  height: 96px;
+  width: 84px;
+  height: 84px;
   border-radius: 20px;
   display: grid;
   place-items: center;

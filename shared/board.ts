@@ -4,6 +4,7 @@ import type { Color } from "./types";
 export const GRID = 15;
 
 export const PATH_CELLS: { x: number; y: number }[] = [
+  { x: 0, y: 6 },
   { x: 1, y: 6 },
   { x: 2, y: 6 },
   { x: 3, y: 6 },
@@ -59,7 +60,6 @@ export const PATH_CELLS: { x: number; y: number }[] = [
   { x: 1, y: 8 },
   { x: 0, y: 8 },
   { x: 0, y: 7 },
-  { x: 0, y: 6 },
 ];
 
 export const PLAYER_START: Record<Color, number> = {

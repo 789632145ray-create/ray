@@ -86,7 +86,8 @@ export function GameScreen({
           })}
           <div className="panel dice-cup">
             <DiceCup
-              value={state.dice ?? state.lastDice}
+              values={state.lastDice}
+              remaining={state.dice}
               rolling={rolling}
               disabled={!canAct || state.phase !== "rolling" || !!winner}
               onRoll={onRoll}
@@ -103,10 +104,10 @@ export function GameScreen({
                     }}
                   >
                     {move.kind === "exit"
-                      ? `馬${move.horseId + 1} 出廄`
+                      ? `馬${move.horseId + 1} 出廄（${move.steps}）`
                       : move.zone === "home"
-                        ? `馬${move.horseId + 1} 進槽 ${move.progress}`
-                        : `馬${move.horseId + 1} 走 ${state.dice}`}
+                        ? `馬${move.horseId + 1} 進槽 ${move.progress}（${move.steps}）`
+                        : `馬${move.horseId + 1} 走 ${move.steps}`}
                     {move.captured ? " · 踢馬" : ""}
                   </button>
                 ))}
