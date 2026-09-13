@@ -246,25 +246,25 @@ button {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+  overflow: visible;
 }
 
 .horse-token {
   cursor: pointer;
-  transition: transform 0.15s ease;
 }
 
-.horse-token.is-playable {
-  animation: pulse 1.2s ease-in-out infinite;
+.horse-token.is-selected circle:first-of-type {
+  stroke: #ffe27a;
+  stroke-width: 0.14px;
 }
 
-.horse-token.is-selected {
-  filter: drop-shadow(0 0 6px #fff4c2);
+.horse-pulse {
+  animation: horse-glow 1.1s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes horse-glow {
   50% {
-    transform: translateY(-0.08px);
+    opacity: 0.2;
   }
 }
 

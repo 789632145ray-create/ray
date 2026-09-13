@@ -9,9 +9,6 @@ import { COLOR_HEX, type Color, type GameState, type Move } from "@shared/types"
 
 const COLORS: Color[] = ["red", "green", "yellow", "blue"];
 
-const HORSE_PATH =
-  "M10.2 3.1c.6-1.3 1.8-2.2 2.6-2.1.2 1.1-.3 2.2-1 3.1 1.3.3 2.3 1.2 2.6 2.3-.8.1-1.6 0-2.3-.3.3 1.4.1 2.8-.6 4.1-.5.9-1.3 1.6-2.2 2.1v2.2h-1.5v-1.8c-.8.1-1.6 0-2.3-.3v2.1H4.1v-2.4c-1.1-.8-1.8-2-2-3.4 1.2.3 2.4.3 3.5 0C4.8 7.1 4.6 5.4 5.2 4c.8.8 1.8 1.3 2.9 1.4.2-.8.6-1.6 1.2-2.3z";
-
 type Props = {
   state: GameState;
   legal: Move[];
@@ -55,9 +52,6 @@ export function Board({
           <stop offset="0%" stopColor="#2f7a4e" />
           <stop offset="100%" stopColor="#163d28" />
         </radialGradient>
-        <filter id="soft">
-          <feDropShadow dx="0" dy="0.08" stdDeviation="0.06" floodOpacity="0.45" />
-        </filter>
       </defs>
       <rect x="-0.45" y="-0.45" width="15.9" height="15.9" rx="0.55" fill="#6b3218" />
       <rect x="0" y="0" width="15" height="15" rx="0.2" fill="url(#felt)" />
@@ -177,12 +171,12 @@ export function Board({
             playerIndex === state.current &&
             legal.some((m) => m.horseId === horse.id);
           const selected = playerIndex === state.current && selectedHorse === horse.id;
+          const cx = pos.x + 0.5;
+          const cy = pos.y + 0.5;
           return (
             <g
               key={`${player.color}-${horse.id}`}
               className={`horse-token${playable ? " is-playable" : ""}${selected ? " is-selected" : ""}`}
-              transform={`translate(${pos.x + 0.5} ${pos.y + 0.5})`}
-              filter="url(#soft)"
               onClick={(event) => {
                 event.stopPropagation();
                 if (!canAct || playerIndex !== state.current) return;
@@ -191,18 +185,16 @@ export function Board({
                 else if (horseMoves.length > 1) onSelectHorse(horse.id);
               }}
             >
-              <circle r="0.4" fill="#fff6e4" stroke={COLOR_HEX[player.color]} strokeWidth="0.09" />
+              <circle cx={cx} cy={cy} r="0.42" fill="#fff6e4" stroke={COLOR_HEX[player.color]} strokeWidth="0.1" />
               {playable ? (
-                <circle r="0.48" fill="none" stroke="#ffe27a" strokeWidth="0.05" opacity="0.9" />
+                <circle className="horse-pulse" cx={cx} cy={cy} r="0.54" fill="none" stroke="#ffe27a" strokeWidth="0.07" />
               ) : null}
-              <g transform="translate(-0.2 -0.24) scale(0.032)" fill={COLOR_HEX[player.color]}>
-                <path d={HORSE_PATH} />
-              </g>
               <text
-                y="0.3"
+                x={cx}
+                y={cy + 0.14}
                 textAnchor="middle"
                 fill={COLOR_HEX[player.color]}
-                fontSize="0.22"
+                fontSize="0.38"
                 fontWeight="700"
               >
                 {horse.id + 1}
