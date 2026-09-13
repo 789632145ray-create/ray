@@ -26,9 +26,15 @@ function setHorse(player: Player, id: number, zone: Horse["zone"], progress: num
 
 describe("board", () => {
   it("has 52 unique path cells", () => {
-    expect(PATH_CELLS).toHaveLength(52);
+    expect(PATH_CELLS).toHaveLength(56);
     const keys = new Set(PATH_CELLS.map((c) => `${c.x},${c.y}`));
-    expect(keys.size).toBe(52);
+    expect(keys.size).toBe(56);
+    expect(PATH_CELLS).toEqual(expect.arrayContaining([
+      { x: 6, y: 6 },
+      { x: 8, y: 6 },
+      { x: 8, y: 8 },
+      { x: 6, y: 8 },
+    ]));
   });
 
   it("keeps home stall 6 outside the center cell", () => {
@@ -115,7 +121,7 @@ describe("movement and capture", () => {
 
   it("kicks an opponent back to the nest", () => {
     let state = createGame(["紅", "綠"]);
-    setHorse(state.players[0], 0, "path", 10);
+    setHorse(state.players[0], 0, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
     state.dice = 3;
@@ -123,7 +129,7 @@ describe("movement and capture", () => {
     expect(move).toBeTruthy();
     state = applyMove(state, move!);
     expect(state.players[1].horses[0].zone).toBe("nest");
-    expect(state.players[0].horses[0].progress).toBe(13);
+    expect(state.players[0].horses[0].progress).toBe(14);
   });
 
   it("cannot land on its own horse", () => {
@@ -138,8 +144,8 @@ describe("movement and capture", () => {
 
   it("cannot jump a horse in front, even to kick further ahead", () => {
     let state = createGame(["紅", "綠"]);
-    setHorse(state.players[0], 0, "path", 10);
-    setHorse(state.players[0], 1, "path", 12);
+    setHorse(state.players[0], 0, "path", 11);
+    setHorse(state.players[0], 1, "path", 13);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
     state.dice = 3;
@@ -150,24 +156,24 @@ describe("movement and capture", () => {
 
   it("kicks only when the roll lands exactly on the opponent", () => {
     let state = createGame(["紅", "綠"]);
-    setHorse(state.players[0], 0, "path", 10);
+    setHorse(state.players[0], 0, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
     state.dice = 4;
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
     state.dice = 2;
-    expect(getLegalMoves(state).some((m) => m.horseId === 0 && m.progress === 12 && !m.captured)).toBe(
+    expect(getLegalMoves(state).some((m) => m.horseId === 0 && m.progress === 13 && !m.captured)).toBe(
       true,
     );
     state.dice = 3;
     const kick = getLegalMoves(state).find((m) => m.horseId === 0 && m.captured);
-    expect(kick?.progress).toBe(13);
+    expect(kick?.progress).toBe(14);
   });
 
   it("cannot jump an opponent sitting in front", () => {
     let state = createGame(["紅", "綠"]);
     setHorse(state.players[0], 0, "path", 10);
-    setHorse(state.players[1], 0, "path", 51);
+    setHorse(state.players[1], 0, "path", 54);
     state.phase = "moving";
     state.dice = 4;
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
@@ -180,19 +186,19 @@ describe("movement and capture", () => {
 describe("home stretch and win", () => {
   it("cannot enter home by jumping a horse on the last path squares", () => {
     let state = createGame(["紅", "綠"]);
-    setHorse(state.players[0], 0, "path", 49);
-    setHorse(state.players[1], 0, "path", 38);
+    setHorse(state.players[0], 0, "path", 53);
+    setHorse(state.players[1], 0, "path", 41);
     state.phase = "moving";
     state.dice = 4;
     expect(getLegalMoves(state).some((m) => m.horseId === 0)).toBe(false);
     state.dice = 2;
     const kick = getLegalMoves(state).find((m) => m.horseId === 0);
-    expect(kick).toMatchObject({ zone: "path", progress: 51, captured: { playerIndex: 1, horseId: 0 } });
+    expect(kick).toMatchObject({ zone: "path", progress: 55, captured: { playerIndex: 1, horseId: 0 } });
   });
 
   it("enters the home column with leftover steps", () => {
     let state = createGame(["紅", "綠"]);
-    setHorse(state.players[0], 0, "path", 50);
+    setHorse(state.players[0], 0, "path", 54);
     state.phase = "moving";
     state.dice = 3;
     const move = getLegalMoves(state).find((m) => m.horseId === 0);
@@ -240,7 +246,7 @@ describe("AI", () => {
   it("prefers a capture over a quiet advance", () => {
     const state = createGame(["紅", "綠"], { bots: [true, false] });
     setHorse(state.players[0], 0, "path", 3);
-    setHorse(state.players[0], 1, "path", 10);
+    setHorse(state.players[0], 1, "path", 11);
     setHorse(state.players[1], 0, "path", 0);
     state.phase = "moving";
     state.dice = 3;

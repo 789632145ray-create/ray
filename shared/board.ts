@@ -9,6 +9,7 @@ export const PATH_CELLS: { x: number; y: number }[] = [
   { x: 3, y: 6 },
   { x: 4, y: 6 },
   { x: 5, y: 6 },
+  { x: 6, y: 6 },
   { x: 6, y: 5 },
   { x: 6, y: 4 },
   { x: 6, y: 3 },
@@ -22,6 +23,7 @@ export const PATH_CELLS: { x: number; y: number }[] = [
   { x: 8, y: 3 },
   { x: 8, y: 4 },
   { x: 8, y: 5 },
+  { x: 8, y: 6 },
   { x: 9, y: 6 },
   { x: 10, y: 6 },
   { x: 11, y: 6 },
@@ -35,6 +37,7 @@ export const PATH_CELLS: { x: number; y: number }[] = [
   { x: 11, y: 8 },
   { x: 10, y: 8 },
   { x: 9, y: 8 },
+  { x: 8, y: 8 },
   { x: 8, y: 9 },
   { x: 8, y: 10 },
   { x: 8, y: 11 },
@@ -48,6 +51,7 @@ export const PATH_CELLS: { x: number; y: number }[] = [
   { x: 6, y: 11 },
   { x: 6, y: 10 },
   { x: 6, y: 9 },
+  { x: 6, y: 8 },
   { x: 5, y: 8 },
   { x: 4, y: 8 },
   { x: 3, y: 8 },
@@ -60,9 +64,9 @@ export const PATH_CELLS: { x: number; y: number }[] = [
 
 export const PLAYER_START: Record<Color, number> = {
   red: 0,
-  green: 13,
-  yellow: 26,
-  blue: 39,
+  green: 14,
+  yellow: 28,
+  blue: 42,
 };
 
 /** Home cells 1–6 from gate toward the center. */
@@ -135,8 +139,8 @@ export const YARD_RECT: Record<Color, { x: number; y: number }> = {
   blue: { x: 0, y: 9 },
 };
 
-export const PATH_LENGTH = 52;
-export const LAST_PATH = 51;
+export const PATH_LENGTH = 56;
+export const LAST_PATH = 55;
 export const HOME_MAX = 6;
 export const WIN_HOME_CELLS = [3, 4, 5, 6] as const;
 export const MAX_ROLLS_PER_TURN = 3;
