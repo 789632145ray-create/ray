@@ -41,12 +41,11 @@ export function Board({
 
   function clickCell(x: number, y: number) {
     if (!canAct) return;
-    const hits = dests.filter((d) => Math.abs(d.x - x) < 0.01 && Math.abs(d.y - y) < 0.01);
-    if (hits.length === 1) onChooseMove(hits[0].move);
-    else if (selectedHorse != null) {
-      const match = hits.find((h) => h.move.horseId === selectedHorse);
-      if (match) onChooseMove(match.move);
-    }
+    const hits = dests.filter((d) => Math.abs(d.x - x) < 0.6 && Math.abs(d.y - y) < 0.6);
+    const match =
+      (selectedHorse != null ? hits.find((h) => h.move.horseId === selectedHorse) : undefined) ??
+      hits[0];
+    if (match) onChooseMove(match.move);
   }
 
   return (
@@ -103,6 +102,7 @@ export function Board({
               <path
                 d={`M${cell.x + 0.5} ${cell.y + 0.22} l0.1 0.2 0.22.03-0.16.16.04.22L${cell.x + 0.5} ${cell.y + 0.72} l-0.2.11.04-.22-0.16-.16 0.22-.03z`}
                 fill="#fff6cf"
+                pointerEvents="none"
               />
             ) : null}
           </g>
@@ -129,6 +129,7 @@ export function Board({
               fontSize="0.42"
               fill="#fff8df"
               fontWeight="700"
+              pointerEvents="none"
             >
               {idx + 1}
             </text>
@@ -136,42 +137,34 @@ export function Board({
         )),
       )}
 
-      <polygon
-        points="6,6 9,6 9,9 6,9"
+      <rect
+        x="7.06"
+        y="7.06"
+        width="0.88"
+        height="0.88"
+        rx="0.18"
         fill="#7a1d1a"
         stroke="#e3c36a"
-        strokeWidth="0.08"
+        strokeWidth="0.06"
+        pointerEvents="none"
       />
-      <circle cx="7.5" cy="7.5" r="1.15" fill="#c4282a" stroke="#e3c36a" strokeWidth="0.07" />
-      <text
-        x="7.5"
-        y="7.18"
-        textAnchor="middle"
-        fill="#ffe7a8"
-        fontSize="0.32"
-        fontFamily="Noto Serif TC, serif"
-      >
-        賽馬
-      </text>
-      <text x="7.5" y="7.62" textAnchor="middle" fill="#fff0c8" fontSize="0.42">
-        🐎
-      </text>
-      <text x="7.5" y="8.08" textAnchor="middle" fill="#f0d27a" fontSize="0.22">
-        CÁ NGỰA
+      <text x="7.5" y="7.64" textAnchor="middle" fill="#ffe7a8" fontSize="0.42" pointerEvents="none">
+        馬
       </text>
 
       {dests.map((d, i) => (
         <rect
           key={`d${i}`}
-          x={d.x + 0.18}
-          y={d.y + 0.18}
-          width="0.64"
-          height="0.64"
-          rx="0.14"
-          fill="none"
+          x={d.x + 0.1}
+          y={d.y + 0.1}
+          width="0.8"
+          height="0.8"
+          rx="0.16"
+          fill="rgba(255, 220, 90, 0.55)"
           stroke="#fff4b0"
-          strokeWidth="0.07"
-          opacity="0.95"
+          strokeWidth="0.08"
+          onClick={() => clickCell(d.x, d.y)}
+          style={{ cursor: "pointer" }}
         />
       ))}
 
@@ -198,15 +191,18 @@ export function Board({
                 else if (horseMoves.length > 1) onSelectHorse(horse.id);
               }}
             >
-              <circle r="0.36" fill={COLOR_HEX[player.color]} stroke="#fff6d7" strokeWidth="0.05" />
-              <g transform="translate(-0.17 -0.2) scale(0.026)" fill="#fff8e4">
+              <circle r="0.4" fill="#fff6e4" stroke={COLOR_HEX[player.color]} strokeWidth="0.09" />
+              {playable ? (
+                <circle r="0.48" fill="none" stroke="#ffe27a" strokeWidth="0.05" opacity="0.9" />
+              ) : null}
+              <g transform="translate(-0.2 -0.24) scale(0.032)" fill={COLOR_HEX[player.color]}>
                 <path d={HORSE_PATH} />
               </g>
               <text
-                y="0.26"
+                y="0.3"
                 textAnchor="middle"
-                fill="#fff8e4"
-                fontSize="0.2"
+                fill={COLOR_HEX[player.color]}
+                fontSize="0.22"
                 fontWeight="700"
               >
                 {horse.id + 1}

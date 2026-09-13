@@ -1,6 +1,6 @@
 import { chooseAiMove } from "@shared/ai";
 import { applyMove, createGame, rollDice } from "@shared/engine";
-import type { GameState, Move, RoomState } from "@shared/types";
+import { COLOR_LABEL, type GameState, type Move, type RoomState } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import { soundCapture, soundMove, soundRoll, soundWin, unlockAudio } from "./audio";
@@ -78,16 +78,19 @@ export function App() {
         if (!current || current.phase === "finished") return current;
         const bot = current.players[current.current];
         if (!bot.isBot) return current;
-        if (current.phase === "rolling") {
-          soundRoll();
-          const rolled = rollDice(current);
-          return rolled;
+        try {
+          if (current.phase === "rolling") {
+            soundRoll();
+            return rollDice(current);
+          }
+          const move = chooseAiMove(current);
+          if (!move) return current;
+          const next = applyMove(current, move);
+          playMoveSound(current, next);
+          return next;
+        } catch {
+          return current;
         }
-        const move = chooseAiMove(current);
-        if (!move) return current;
-        const next = applyMove(current, move);
-        playMoveSound(current, next);
-        return next;
       });
     }, 700);
     return () => window.clearTimeout(timer);
@@ -110,17 +113,28 @@ export function App() {
     setRolling(true);
     soundRoll();
     window.setTimeout(() => {
-      setLocalGame((current) => (current ? rollDice(current) : current));
+      setLocalGame((current) => {
+        if (!current || current.phase !== "rolling") return current;
+        try {
+          return rollDice(current);
+        } catch {
+          return current;
+        }
+      });
       setRolling(false);
     }, 380);
   }
 
   function moveLocal(move: Move) {
     setLocalGame((current) => {
-      if (!current) return current;
-      const next = applyMove(current, move);
-      playMoveSound(current, next);
-      return next;
+      if (!current || current.phase !== "moving") return current;
+      try {
+        const next = applyMove(current, move);
+        playMoveSound(current, next);
+        return next;
+      } catch {
+        return current;
+      }
     });
   }
 
@@ -288,7 +302,7 @@ export function App() {
                   <b>{player.name}</b>
                   <div className="muted">
                     {player.isHost ? "房主" : player.isBot ? "電腦" : "玩家"}
-                    {player.color ? ` · ${player.color}` : ""}
+                    {player.color ? ` · ${COLOR_LABEL[player.color]}` : ""}
                   </div>
                 </div>
                 {you?.isHost && !player.isHost ? (

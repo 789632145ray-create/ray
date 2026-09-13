@@ -106,6 +106,7 @@ button {
   padding: 22px 20px 20px;
   text-align: left;
   color: inherit;
+  border-width: 2px;
   transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
@@ -235,9 +236,9 @@ button {
     var(--wood);
   border-radius: 28px;
   padding: 14px;
-  border: 3px solid #e3c36a;
+  border: 5px solid #e3c36a;
   box-shadow:
-    0 0 0 8px #5a2a14,
+    0 0 0 10px #5a2a14,
     0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
@@ -329,12 +330,29 @@ button {
 }
 
 .pip {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #2a140c;
   justify-self: center;
   align-self: center;
+}
+
+.move-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.move-chip {
+  border: 1px solid rgba(227, 195, 106, 0.55);
+  background: rgba(80, 30, 16, 0.7);
+  color: #fff1c8;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
 }
 
 .log {

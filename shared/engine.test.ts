@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PATH_CELLS } from "./board";
+import { HOME_CELLS, PATH_CELLS } from "./board";
 import { chooseAiMove } from "./ai";
 import { applyMove, createGame, getLegalMoves, rollDice } from "./engine";
 import type { GameState, Horse, Player } from "./types";
@@ -29,6 +29,13 @@ describe("board", () => {
     expect(PATH_CELLS).toHaveLength(52);
     const keys = new Set(PATH_CELLS.map((c) => `${c.x},${c.y}`));
     expect(keys.size).toBe(52);
+  });
+
+  it("keeps home stall 6 outside the center cell", () => {
+    for (const cells of Object.values(HOME_CELLS)) {
+      expect(cells).toHaveLength(6);
+      expect(cells[5]).not.toEqual({ x: 7, y: 7 });
+    }
   });
 });
 

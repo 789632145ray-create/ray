@@ -34,7 +34,7 @@ export function GameScreen({
     ? `${winner.name} 勝出`
     : state.phase === "rolling"
       ? `${current.name} 請擲骰`
-      : `${current.name} 請走馬${legal.some((m) => m.kind === "exit") ? "（可出廄）" : ""}`;
+      : `${current.name} 請走馬：點發亮的馬、金色格子，或右側按鈕${legal.some((m) => m.kind === "exit") ? "（可出廄）" : ""}`;
 
   return (
     <>
@@ -89,6 +89,27 @@ export function GameScreen({
               disabled={!canAct || state.phase !== "rolling" || !!winner}
               onRoll={onRoll}
             />
+            {canAct && state.phase === "moving" && legal.length > 0 ? (
+              <div className="move-list">
+                {legal.map((move, index) => (
+                  <button
+                    key={`${move.horseId}-${move.kind}-${move.progress}-${index}`}
+                    className="move-chip"
+                    onClick={() => {
+                      setSelectedHorse(null);
+                      onMove(move);
+                    }}
+                  >
+                    {move.kind === "exit"
+                      ? `馬${move.horseId + 1} 出廄`
+                      : move.zone === "home"
+                        ? `馬${move.horseId + 1} 進槽 ${move.progress}`
+                        : `馬${move.horseId + 1} 走 ${state.dice}`}
+                    {move.captured ? " · 踢馬" : ""}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="panel">
             <h2 style={{ fontSize: 20 }}>賽況</h2>
