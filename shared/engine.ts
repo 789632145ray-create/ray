@@ -239,7 +239,7 @@ function finishDiceOrPass(state: GameState): void {
   if (state.bonusRoll && state.rollsThisTurn < MAX_ROLLS_PER_TURN) {
     state.phase = "rolling";
     state.dice = null;
-    state.log = [`擲到 1、6 或對子，${state.players[state.current].name} 再擲一次`, ...state.log];
+    state.log = [`擲到 6 或對子，${state.players[state.current].name} 再擲一次`, ...state.log];
     return;
   }
   passTurn(state);

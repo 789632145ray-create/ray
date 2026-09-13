@@ -67,7 +67,7 @@ describe("roll and exit", () => {
     expect(state.lastDice).toEqual([6, 4]);
     const exits = getLegalMoves(state).filter((m) => m.kind === "exit");
     expect(exits).toHaveLength(4);
-    expect(exits[0].steps).toBe(6);
+    expect(exits.every((m) => m.steps === 6)).toBe(true);
     state = applyMove(state, exits[0]);
     expect(state.players[0].horses[0].zone).toBe("path");
     expect(state.players[0].horses[0].progress).toBe(0);
@@ -76,9 +76,9 @@ describe("roll and exit", () => {
     expect(state.phase).toBe("moving");
   });
 
-  it("cannot leave the nest without a 1 or 6", () => {
+  it("cannot leave the nest without a 6", () => {
     let state = createGame(["紅", "綠"]);
-    state = rollDice(state, rngSeq([die(3), die(2)]));
+    state = rollDice(state, rngSeq([die(1), die(2)]));
     expect(getLegalMoves(state)).toHaveLength(0);
     expect(state.current).toBe(1);
     expect(state.phase).toBe("rolling");

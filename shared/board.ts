@@ -144,7 +144,7 @@ export const LAST_PATH = 55;
 export const HOME_MAX = 6;
 export const WIN_HOME_CELLS = [3, 4, 5, 6] as const;
 export const MAX_ROLLS_PER_TURN = 3;
-export const EXIT_NUMBERS = new Set([1, 6]);
+export const EXIT_NUMBERS = new Set([6]);
 
 export function pathIndexFor(color: Color, progress: number): number {
   return (PLAYER_START[color] + progress) % PATH_LENGTH;
